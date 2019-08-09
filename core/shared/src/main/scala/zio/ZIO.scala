@@ -1294,6 +1294,13 @@ sealed trait ZIO[-R, +E, +A] extends Serializable { self =>
     ZIO.whenM(b)(self)
 
   /**
+   * Returns an effect that yields to the runtime system, starting on a fresh
+   * stack. Manual use of this method can improve fairness, at the cost of
+   * overhead.
+   */
+  final def yieldNow: ZIO[R, E, A] = new ZIO.Yield(self)
+
+  /**
    * A named alias for `&&&` or `<*>`.
    */
   final def zip[R1 <: R, E1 >: E, B](that: ZIO[R1, E1, B]): ZIO[R1, E1, (A, B)] =
@@ -2349,7 +2356,7 @@ private[zio] trait ZIOFunctions extends Serializable {
    * stack. Manual use of this method can improve fairness, at the cost of
    * overhead.
    */
-  final val yieldNow: UIO[Unit] = new ZIO.Yield
+  final val yieldNow: UIO[Unit] = new ZIO.Yield(ZIO.unit)
 
   /**
    * Returns an effectful function that extracts out the first element of a
@@ -2625,7 +2632,7 @@ object ZIO extends ZIOFunctions {
     override def tag = Tags.Lock
   }
 
-  private[zio] final class Yield[R, E, A](val resume: ZIO[R, E, A] = ZIO.unit) extends UIO[Unit] {
+  private[zio] final class Yield[R, E, A](val resume: ZIO[R, E, A]) extends ZIO[R, E, A] {
     override def tag = Tags.Yield
   }
 

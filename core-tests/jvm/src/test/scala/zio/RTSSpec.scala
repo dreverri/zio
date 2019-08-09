@@ -7,6 +7,7 @@ import com.github.ghik.silencer.silent
 import org.specs2.concurrent.ExecutionEnv
 import zio.Cause.{ die, fail, Fail, Then }
 import zio.duration._
+import zio.internal.PlatformLive
 import zio.clock.Clock
 
 import scala.annotation.tailrec
@@ -128,6 +129,7 @@ class RTSSpec(implicit ee: ExecutionEnv) extends TestRuntime with org.specs2.mat
     deadlock regression 1                         $testDeadlockRegression
     check interruption regression 1               $testInterruptionRegression1
     manual sync interruption                      $testManualSyncInterruption
+    max yield Ops 1                               $testOneMaxYield
 
   RTS option tests
     lifting a value to an option                  $testLiftingOptionalValue
@@ -1359,6 +1361,19 @@ class RTSSpec(implicit ee: ExecutionEnv) extends TestRuntime with org.specs2.mat
       for {
         fiber <- putStr(".").forever.fork
         _     <- fiber.interrupt
+      } yield true
+    )
+  }
+
+  def testOneMaxYield = {
+    val rts = new DefaultRuntime {
+      override val Platform = PlatformLive.Default.withExecutor(PlatformLive.ExecutorUtil.makeDefault(1))
+    }
+
+     rts.unsafeRun(
+      for {
+        _ <- UIO.unit
+        _ <- UIO.unit
       } yield true
     )
   }
