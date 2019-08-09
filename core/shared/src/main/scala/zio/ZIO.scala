@@ -2349,7 +2349,7 @@ private[zio] trait ZIOFunctions extends Serializable {
    * stack. Manual use of this method can improve fairness, at the cost of
    * overhead.
    */
-  final val yieldNow: UIO[Unit] = ZIO.Yield
+  final val yieldNow: UIO[Unit] = new ZIO.Yield
 
   /**
    * Returns an effectful function that extracts out the first element of a
@@ -2625,7 +2625,7 @@ object ZIO extends ZIOFunctions {
     override def tag = Tags.Lock
   }
 
-  private[zio] object Yield extends UIO[Unit] {
+  private[zio] final class Yield[R, E, A](val resume: ZIO[R, E, A] = ZIO.unit) extends UIO[Unit] {
     override def tag = Tags.Yield
   }
 
