@@ -244,7 +244,7 @@ private[zio] final class FiberContext[E, A](
 
         while (curZio ne null) {
           if (opcount == maxopcount) {
-            curZio = new ZIO.Yield(curZio)
+            curZio = curZio.yieldNow
           }
 
           val tag = curZio.tag
